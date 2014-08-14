@@ -25,11 +25,17 @@
 		return;
 	}
 
-	_myStatusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
+	_myStatusItem = [NSStatusBar.systemStatusBar statusItemWithLength:NSSquareStatusItemLength];
 	
-	_myStatusItem.image = [NSImage imageNamed:@"menuIcon-normal"];
-	_myStatusItem.alternateImage = [NSImage imageNamed:@"menuIcon-selected"];
-	_myStatusItem.highlightMode = YES;
+	if ([_myStatusItem respondsToSelector:@selector(button)]) {
+		NSImage *statusImage = [NSImage imageNamed:@"menuIcon-normal"];
+		statusImage.template = YES;
+		_myStatusItem.button.image = statusImage;
+	} else {
+		_myStatusItem.image = [NSImage imageNamed:@"menuIcon-normal"];
+		_myStatusItem.alternateImage = [NSImage imageNamed:@"menuIcon-selected"];
+		_myStatusItem.highlightMode = YES;
+	}
 	
 	[_myStatusItem setMenu:_menuItemMenu];
 	
