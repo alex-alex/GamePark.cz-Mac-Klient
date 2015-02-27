@@ -401,16 +401,29 @@
 
 #pragma mark - Files
 
+- (NSString *)removeAccentsFrom:(NSString *)text {
+	NSMutableCharacterSet *acceptedCharacters = [[NSMutableCharacterSet alloc] init];
+	[acceptedCharacters formUnionWithCharacterSet:[NSCharacterSet letterCharacterSet]];
+	[acceptedCharacters formUnionWithCharacterSet:[NSCharacterSet decimalDigitCharacterSet]];
+	[acceptedCharacters addCharactersInString:@" _-.!"];
+	NSData *sanitizedData = [text dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES];
+	NSString *sanitizedText = [[NSString alloc] initWithData:sanitizedData encoding:NSASCIIStringEncoding];
+	return [[sanitizedText componentsSeparatedByCharactersInSet:[acceptedCharacters invertedSet]] componentsJoinedByString:@""];
+}
+
 - (NSString *)fileStrAtPath:(NSString *)path {
 	path = [path stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
 	
 	NSFileManager *fm = NSFileManager.defaultManager;
-	NSArray *content = [fm contentsOfDirectoryAtURL:[NSURL fileURLWithPath:path] includingPropertiesForKeys:@[] options:NSDirectoryEnumerationSkipsHiddenFiles error:nil];
+	NSError *error;
+	NSArray *content = [fm contentsOfDirectoryAtURL:[NSURL fileURLWithPath:path] includingPropertiesForKeys:@[] options:NSDirectoryEnumerationSkipsHiddenFiles error:&error];
+	if (error) { NSLog(@"Error: %@", error); error = nil; }
 	NSMutableString *mutableStr = [NSMutableString string];
 	for (NSURL *url in content) {
 		BOOL isDirectory;
 		[mutableStr appendString:([fm fileExistsAtPath:url.path isDirectory:&isDirectory] && isDirectory) ? @"[D]" : @"[F]"];
-		[mutableStr appendFormat:@" %@;;", url.lastPathComponent];
+		NSString *fileName = [self removeAccentsFrom:url.lastPathComponent];
+		[mutableStr appendFormat:@" %@;;", fileName];
 	}
 	[mutableStr replaceOccurrencesOfString:@"[D] Call of Duty 2 Multiplayer.app" withString:@"[F] CoD2MP_s.exe" options:0 range:NSMakeRange(0, mutableStr.length)];
 	return [NSString stringWithString:mutableStr];
