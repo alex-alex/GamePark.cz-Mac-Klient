@@ -172,21 +172,27 @@
 			
 //			NSLog(@"Launching %@", processId);
 			
-			NSTask *task = [NSTask new];
-			task.launchPath = gamePath;
-			task.arguments = @[parameters];
-			task.terminationHandler = ^(NSTask *aTask){
-//				NSLog(@"Process %@ Terminated", processId);
-				[_runningProcesses removeObjectForKey:processId];
-				NSData *commandToSend = [self makeResponse:4 :30 :3 :processId :nil :nil :50 :YES];
-				[_receivingSocket writeData:commandToSend withTimeout:TIMEOUT tag:PROCESS_TERMINATED];
-			};
-			[task launch];
-			
-			_runningProcesses[processId] = task;
-			
-			NSData *commandToSend = [self makeResponse:3 :20 :3 :@"" :@"execProcess" :nil :0 :NO];
-			[sock writeData:commandToSend withTimeout:TIMEOUT tag:RESPONSE_TAG];
+			if ([[NSFileManager defaultManager] fileExistsAtPath:gamePath]) {
+				NSTask *task = [NSTask new];
+				task.launchPath = gamePath;
+				task.arguments = @[parameters];
+				task.terminationHandler = ^(NSTask *aTask){
+//					NSLog(@"Process %@ Terminated", processId);
+					[_runningProcesses removeObjectForKey:processId];
+					NSData *commandToSend = [self makeResponse:4 :30 :3 :processId :nil :nil :50 :YES];
+					[_receivingSocket writeData:commandToSend withTimeout:TIMEOUT tag:PROCESS_TERMINATED];
+				};
+				[task launch];
+				
+				_runningProcesses[processId] = task;
+				
+				NSData *commandToSend = [self makeResponse:3 :20 :3 :@"" :@"execProcess" :nil :0 :NO];
+				[sock writeData:commandToSend withTimeout:TIMEOUT tag:RESPONSE_TAG];
+			} else {
+				dispatch_async(dispatch_get_main_queue(), ^{
+					NSRunAlertPanel(@"Game not found", @"", @"OK", nil, nil);
+				});
+			}
 			
 		} else if ([msg hasPrefix:@"killProcess"]) {
 			
