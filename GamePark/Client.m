@@ -347,7 +347,10 @@
 	char *bytes = [mutableData mutableBytes];
 	int length = (int)mutableData.length - 1;
 	
-	int _loc4_ = bytes[0] % 110;
+	int _loc4_ = 0;
+	if (length > 0) {
+		_loc4_ = bytes[0] % 110;
+	}
 	
 	for (int i = 0; i < length / 2; i++) {
 		var1 = bytes[i];
